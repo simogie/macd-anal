@@ -1,0 +1,242 @@
+---
+title: "MACD分析 - 日経225"
+author: ""
+date: today
+format:
+  html:
+    toc: true
+    toc-title: "目次"
+    code-fold: true
+    theme: cosmo
+lang: ja
+---
+
+## 概要
+
+日経225の終値データを使い、MACDヒストグラムをスプライン平滑化して
+1階・2階微分によってトレンドの勢い・加速度を可視化する。
+
+---
+
+## 1. パッケージ・データ読み込み
+##ここからRコードが始まることをQuartoに伝えるQuarto専用のチャンクオプション記法で、.R ファイルの通常コメント # とは別物です。
+
+#<!-- これらを false にしておかないと、library(TTR) #を読み込んだ際の英語メッセージがHTMLレポートにそのまま表示 -->
+
+```{r}
+#| message: false
+#| warning: false
+
+
+library(TTR)
+
+Sys.setenv(LANGUAGE = "ja")　
+#
+
+
+df <- read.csv("D:/R/workspace/n225E.csv")
+colnames(df) <- c("date", "close")
+df$date  <- as.Date(df$date)
+df$close <- as.numeric(df$close)
+```
+
+---
+
+## 2. MACD計算
+
+#MACDは短期EMA（12日）と長期EMA（26日）の差。
+#シグナルはMACDの9日EMA
+#ヒストグラム MACD − シグナル。
+
+```{r}
+macd      <- MACD(df$close, nFast = 12, nSlow = 26, nSig = 9)
+df$macd   <- macd[, 1]
+df$signal <- macd[, 2]
+df$hist   <- df$macd - df$signal
+
+df <- na.omit(df)
+
+# 2025年以降に絞る
+df <- df[df$date >= as.Date("2025-01-01"), ]
+```
+
+---
+
+## 3. スプライン平滑化と微分（全期間）
+
+```{r}
+
+x   <- 1:nrow(df) #スプライン平滑化
+fit <- smooth.spline(x, df$hist, spar = 0.6) #スプラインの微分
+d1 <- predict(fit, x, deriv = 1)$y #スプラインの2階微分
+d2 <- predict(fit, x, deriv = 2)$y
+
+# 月ラインと月番号ラベルを描画するヘルパー（1月のみ強調色）
+add_month_lines <- function(dates, jan_col = "green", other_col = "lightgray") {
+  ms <- unique(as.Date(format(dates, "%Y-%m-01")))
+  m  <- as.integer(format(ms, "%m"))
+  abline(v = as.numeric(ms[m != 1]), col = other_col, lty = 1)
+  abline(v = as.numeric(ms[m == 1]), col = jan_col,   lty = 1, lwd = 1.5)
+  # 毎月15日に点線
+  ms15 <- as.Date(format(ms, "%Y-%m-15"))
+  abline(v = as.numeric(ms15), col = "lightgray", lty = 3)
+  text(x = as.numeric(ms), y = par("usr")[3],
+       labels = m, col = ifelse(m == 1, jan_col, "black"),
+       xpd = TRUE, cex = 0.7, adj = c(0.5, 1.5))
+}
+```
+
+---
+
+## 4. グラフ（全期間）
+
+### 終値
+
+```{r}
+plot(df$date, df$close, type = "l", main = "Close Price",
+     xlab = "日付", ylab = "終値")
+add_month_lines(df$date)
+```
+
+### MACDヒストグラム＋スプライン
+
+```{r}
+plot(df$date, df$hist, type = "l", main = "MACD Histogram",
+     xlab = "日付", ylab = "MACD Histogram")
+lines(df$date, predict(fit)$y, col = "red", lwd = 2)
+add_month_lines(df$date)
+abline(h = 0, col = "darkgoldenrod", lty = 1)
+legend("topright", legend = c("Histogram", "Spline"), col = c("black", "red"), lty = 1,
+       cex = 0.7, bty = "n")
+```
+
+### 1階微分（変化の速さ）
+![1階微分（変化の速さ）](515.png){width=80% fig-align="center"}
+
+
+```{r}
+plot(df$date, d1, type = "l", main = "1階:MACDﾋｽﾄｸﾞﾗﾑのｽﾌﾟﾗｲﾝ曲線の変化速度",
+     xlab = "日付", ylab = "d1")
+add_month_lines(df$date)
+abline(h = 0, col = "gray", lty = 2)
+```
+
+### 2階微分（変化の加速度）
+
+```{r}
+plot(df$date, d2, type = "l", main = "2階:変化の変化率",
+     xlab = "日付", ylab = "d2")
+add_month_lines(df$date)
+abline(h = 0, col = "gray", lty = 2)
+```
+
+---
+
+## 5. 微分グラフの読み方
+
+グラフに「1階微分」「2階微分」が描画されている場合、
+元のデータの「曲がり具合」や「変化の加速・減速」を視覚化している。
+
+### ① 各微分の役割
+
+| 記号 | 名称 | 意味 |
+|---|---|---|
+| $$f(x)$$ | 元のグラフ | 現在の値（価格など）そのもの |
+| $$f'(x)$$ | 1階微分 | 変化の勢い（速度）。右上がり＝プラス、右下がり＝マイナス |
+| $$f''(x)$$ | 2階微分 | 変化の勢いの変化（加速度）。1階微分がさらにどう変化しているか |
+
+### ② 2階微分のグラフから読み取れること
+
+2階微分の正負によって、元のデータの「勢いの方向」がわかる。
+
+| 2階微分の値 | 形状 | 意味 |
+|---|---|---|
+| **プラス（$$>0$$）** | 下に凸（U字型） | 勢いが増している。株価が下落中でもプラスに転じれば下げ止まり・反転の兆し |
+| **マイナス（$$<0$$）** | 上に凸（山型） | 勢いが衰えている。上昇中でもマイナスなら「ピークアウト」が近い |
+| **ゼロ（$$=0$$）** | 変曲点 | 加速から減速（またはその逆）へ切り替わるタイミング |
+
+### ③ なぜ2階微分を表示するのか？
+
+1階微分（速度）だけでは「今上がっている」ことはわかっても、
+その上がりにブレーキがかかり始めているかまでは直感的に判別しにくい。
+
+2階微分をグラフ化することで、数値がピークに達する一歩手前の予兆や
+トレンドの強弱をより数学的に厳密に把握できる。
+データの「曲がり角」を探す局面で特に有効。
+
+---
+
+## 6. 直近N日の分析（2026/5/16追加）
+
+`tail()` でデータを切り出すだけで直近N日に絞れる。
+スプラインもN日分で再計算する必要があるため `fit_recent` を別途作成する。
+
+```{r}
+# 期間を変えたい場合はここだけ変更する
+#
+
+N <- 100 
+
+df_recent <- tail(df, N)
+x_recent  <- 1:nrow(df_recent)
+
+# スプラインも直近N日で再計算
+fit_recent <- smooth.spline(x_recent, df_recent$hist, spar = 0.6)
+d1_recent  <- predict(fit_recent, x_recent, deriv = 1)$y
+d2_recent  <- predict(fit_recent, x_recent, deriv = 2)$y
+```
+
+### 終値（直近N日）
+
+```{r}
+plot(df_recent$date, df_recent$close, type = "l",
+     main = paste0("終値（直近 ", N, " 日）"),
+     xlab = "日付", ylab = "終値")
+add_month_lines(df_recent$date)
+```
+
+### MACDヒストグラム＋スプライン（直近N日）
+
+```{r}
+plot(df_recent$date, df_recent$hist, type = "l",
+     main = paste0("MACDヒストグラム（直近 ", N, " 日）"),
+     xlab = "日付", ylab = "MACD Histogram")
+lines(df_recent$date, predict(fit_recent)$y, col = "red", lwd = 2)
+add_month_lines(df_recent$date)
+legend("topright", legend = c("Histogram", "Spline"), col = c("black", "red"), lty = 1)
+```
+
+### 1階微分（直近N日）
+
+```{r}
+plot(df_recent$date, d1_recent, type = "l",
+     main = paste0("1階微分（直近 ", N, " 日）"),
+     xlab = "日付", ylab = "d1")
+add_month_lines(df_recent$date)
+abline(h = 0, col = "gray", lty = 2)
+```
+
+### 2階微分（直近N日）
+
+```{r}
+plot(df_recent$date, d2_recent, type = "l",
+     main = paste0("2階微分（直近 ", N, " 日）"),
+     xlab = "日付", ylab = "d2")
+add_month_lines(df_recent$date)
+abline(h = 0, col = "gray", lty = 2)
+```
+
+---
+
+## 7. 補足・今後の改善案
+
+- `N <- 200` のように変数を変えるだけで期間を変更できる
+- 直近N日は「営業日ベース」のため、土日祝は自動的に除外される
+- スプラインの `spar` は期間が短いほど影響が大きいため、適宜調整する
+
+**今後追加できる機能：**
+
+- MACDのゴールデンクロス／デッドクロス検出
+- 微分のゼロクロス点の自動抽出とグラフへのマーカー表示
+- 売買シグナルの自動生成
+- ggplot2 での高品質グラフ化
