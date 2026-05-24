@@ -203,7 +203,7 @@ plot(df_recent$date, df_recent$hist, type = "l",
      xlab = "日付", ylab = "MACD Histogram")
 lines(df_recent$date, predict(fit_recent)$y, col = "red", lwd = 2)
 add_month_lines(df_recent$date)
-legend("topright", legend = c("Histogram", "Spline"), col = c("black", "red"), lty = 1)
+legend("topleft", legend = c("Histogram", "Spline"), col = c("black", "red"), lty = 1, cex = 0.7)
 ```
 
 ### 1階微分（直近N日）
