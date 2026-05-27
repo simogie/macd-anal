@@ -267,25 +267,30 @@ legend("topleft",
 
 ```{r}
 #| message: false
+library(kableExtra)
+
 spline_y <- predict(fit_recent)$y
 
-peak_tbl <- data.frame(
-  種別   = "山（頂点）",
-  日付   = df_recent$date[peak_idx],
-  スプライン値 = round(spline_y[peak_idx], 5)
+# 全日付のデータフレームを作成し、山・谷をラベル付け
+種別_vec <- rep("", length(df_recent$date))
+種別_vec[peak_idx]   <- "▲ 山（頂点）"
+種別_vec[valley_idx] <- "▼ 谷（底）"
+
+result_tbl <- data.frame(
+  種別         = 種別_vec,
+  日付         = df_recent$date,
+  スプライン値 = round(spline_y, 5)
 )
 
-valley_tbl <- data.frame(
-  種別   = "谷（底）",
-  日付   = df_recent$date[valley_idx],
-  スプライン値 = round(spline_y[valley_idx], 5)
-)
+# 前日との差分で色分け（上昇＝赤、下降＝青、初日はNA）
+delta     <- c(NA, diff(spline_y))
+blue_rows <- which(!is.na(delta) & delta < 0)   # 前日より小さい → 青
+red_rows  <- which(!is.na(delta) & delta > 0)   # 前日より大きい → 赤
 
-result_tbl <- rbind(peak_tbl, valley_tbl)
-result_tbl <- result_tbl[order(result_tbl$日付), ]
-rownames(result_tbl) <- NULL
-
-knitr::kable(result_tbl, align = c("c", "c", "r"))
+knitr::kable(result_tbl, align = c("c", "c", "r")) |>
+  kableExtra::kable_styling(full_width = FALSE) |>
+  kableExtra::row_spec(blue_rows, background = "#d0e8ff", color = "#003399") |>
+  kableExtra::row_spec(red_rows,  background = "#ffe0e0", color = "#cc0000")
 ```
 
 ---
