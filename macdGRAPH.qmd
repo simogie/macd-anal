@@ -93,6 +93,8 @@ add_month_lines <- function(dates, jan_col = "green", other_col = "lightgray") {
 ### 終値
 
 ```{r}
+#| eval: true
+#| fig-show: asis
 plot(df$date, df$close, type = "l", main = "Close Price",
      xlab = "日付", ylab = "終値")
 add_month_lines(df$date)
@@ -101,7 +103,9 @@ add_month_lines(df$date)
 ### MACDヒストグラム＋スプライン
 
 ```{r}
-plot(df$date, df$hist, type = "l", main = "MACD Histogram",
+#| eval: true
+#| fig-show: asis
+plot(df$date, df$hist, type = "l", main = " MACD Histogram",
      xlab = "日付", ylab = "MACD Histogram")
 lines(df$date, predict(fit)$y, col = "red", lwd = 2)
 add_month_lines(df$date)
@@ -111,11 +115,11 @@ legend("topright", legend = c("Histogram", "Spline"), col = c("black", "red"), l
 ```
 
 ### 1階微分（変化の速さ）
-![1階微分（変化の速さ）](515.png){width=80% fig-align="center"}
-
 
 ```{r}
-plot(df$date, d1, type = "l", main = "1階:MACDﾋｽﾄｸﾞﾗﾑのｽﾌﾟﾗｲﾝ曲線の変化速度",
+#| eval: true
+#| fig-show: asis
+plot(df$date, d1, type = "l", main = "1階: MACDﾋｽﾄｸﾞﾗﾑのｽﾌﾟﾗｲﾝ曲線の変化速度",
      xlab = "日付", ylab = "d1")
 add_month_lines(df$date)
 abline(h = 0, col = "gray", lty = 2)
@@ -224,6 +228,64 @@ plot(df_recent$date, d2_recent, type = "l",
      xlab = "日付", ylab = "d2")
 add_month_lines(df_recent$date)
 abline(h = 0, col = "gray", lty = 2)
+```
+
+### 頂点・谷底マーカー（直近N日）
+
+1階微分のゼロクロス点を検出し、スプライン曲線上に山（▼青）と谷（▲橙）をマーカー表示する。
+2階微分の符号で山か谷かを判定する。
+
+```{r}
+# d1のゼロクロス（符号が変わるインデックスを検出）
+sign_changes <- which(diff(sign(d1_recent)) != 0)
+
+# 2階微分の符号で山・谷を分類
+peak_idx   <- sign_changes[d2_recent[sign_changes] < 0]  # 山
+valley_idx <- sign_changes[d2_recent[sign_changes] > 0]  # 谷
+
+# スプライン＋マーカーのプロット
+plot(df_recent$date, df_recent$hist, type = "l",
+     main = paste0("MACDヒストグラム 頂点・谷底（直近 ", N, " 日）"),
+     xlab = "日付", ylab = "MACD Histogram")
+lines(df_recent$date, predict(fit_recent)$y, col = "red", lwd = 2)
+points(df_recent$date[peak_idx],   predict(fit_recent)$y[peak_idx],
+       pch = 25, col = "blue",   bg = "blue",   cex = 1.2)  # 山 ▼
+points(df_recent$date[valley_idx], predict(fit_recent)$y[valley_idx],
+       pch = 24, col = "orange", bg = "orange", cex = 1.2)  # 谷 ▲
+add_month_lines(df_recent$date)
+abline(h = 0, col = "darkgoldenrod", lty = 1)
+legend("topleft",
+       legend = c("Histogram", "Spline", "山（頂点）", "谷（底）"),
+       col    = c("black", "red", "blue", "orange"),
+       lty    = c(1, 1, NA, NA),
+       pch    = c(NA, NA, 25, 24),
+       pt.bg  = c(NA, NA, "blue", "orange"),
+       cex = 0.7, bty = "n")
+```
+
+### 頂点・谷底 一覧表
+
+```{r}
+#| message: false
+spline_y <- predict(fit_recent)$y
+
+peak_tbl <- data.frame(
+  種別   = "山（頂点）",
+  日付   = df_recent$date[peak_idx],
+  スプライン値 = round(spline_y[peak_idx], 5)
+)
+
+valley_tbl <- data.frame(
+  種別   = "谷（底）",
+  日付   = df_recent$date[valley_idx],
+  スプライン値 = round(spline_y[valley_idx], 5)
+)
+
+result_tbl <- rbind(peak_tbl, valley_tbl)
+result_tbl <- result_tbl[order(result_tbl$日付), ]
+rownames(result_tbl) <- NULL
+
+knitr::kable(result_tbl, align = c("c", "c", "r"))
 ```
 
 ---
