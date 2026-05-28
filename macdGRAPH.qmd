@@ -276,14 +276,15 @@ spline_y <- predict(fit_recent)$y
 種別_vec[peak_idx]   <- "▲ 山（頂点）"
 種別_vec[valley_idx] <- "▼ 谷（底）"
 
+# 前日との差分で色分け（上昇＝赤、下降＝青、初日はNA）
+delta     <- c(NA, diff(spline_y))
+
 result_tbl <- data.frame(
   種別         = 種別_vec,
   日付         = df_recent$date,
-  スプライン値 = round(spline_y, 5)
+  スプライン値 = round(spline_y, 3),
+  前日差       = round(delta, 3)
 )
-
-# 前日との差分で色分け（上昇＝赤、下降＝青、初日はNA）
-delta     <- c(NA, diff(spline_y))
 blue_rows <- which(!is.na(delta) & delta < 0)   # 前日より小さい → 青
 red_rows  <- which(!is.na(delta) & delta > 0)   # 前日より大きい → 赤
 
