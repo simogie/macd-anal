@@ -206,6 +206,7 @@ plot(df_recent$date, df_recent$hist, type = "l",
      main = paste0("MACDヒストグラム（直近 ", N, " 日）"),
      xlab = "日付", ylab = "MACD Histogram")
 lines(df_recent$date, predict(fit_recent)$y, col = "red", lwd = 2)
+abline(h = 0, col = "darkgoldenrod", lty = 2)
 add_month_lines(df_recent$date)
 legend("topleft", legend = c("Histogram", "Spline"), col = c("black", "red"), lty = 1, cex = 0.7)
 ```
@@ -236,6 +237,9 @@ abline(h = 0, col = "gray", lty = 2)
 2階微分の符号で山か谷かを判定する。
 
 ```{r}
+#| message: false
+library(kableExtra)
+
 # d1のゼロクロス（符号が変わるインデックスを検出）
 sign_changes <- which(diff(sign(d1_recent)) != 0)
 
@@ -261,15 +265,83 @@ legend("topleft",
        pch    = c(NA, NA, 25, 24),
        pt.bg  = c(NA, NA, "blue", "orange"),
        cex = 0.7, bty = "n")
+
+# 直近マーカーの表示
+spline_y <- predict(fit_recent)$y
+marker_idx <- c(peak_idx, valley_idx)
+marker_idx <- sort(marker_idx)
+
+if (length(marker_idx) > 0) {
+  latest_idx <- tail(marker_idx, 1)
+  
+  if (latest_idx %in% peak_idx) {
+    type <- "山（頂点）"
+  } else {
+    type <- "谷（底）"
+  }
+  
+  latest_marker <- data.frame(
+    種別         = type,
+    日付         = format(df_recent$date[latest_idx], "%Y-%m-%d"),
+    スプライン値 = round(spline_y[latest_idx], 3)
+  )
+  
+  bg_col <- if (type == "山（頂点）") "#cce5ff" else "#ffe6cc"
+  txt_col <- if (type == "山（頂点）") "#0066cc" else "#ff8800"
+  
+  knitr::kable(latest_marker, align = c("c", "c", "r"), row.names = FALSE) |>
+    kableExtra::kable_styling(full_width = FALSE) |>
+    kableExtra::row_spec(1, background = bg_col, color = txt_col)
+}
 ```
 
 ### 頂点・谷底 一覧表
+
+#### 直近マーカー
 
 ```{r}
 #| message: false
 library(kableExtra)
 
 spline_y <- predict(fit_recent)$y
+
+# マーカー位置のデータを抽出
+marker_idx <- c(peak_idx, valley_idx)
+marker_idx <- sort(marker_idx)
+
+if (length(marker_idx) > 0) {
+  # 直近のマーカー（最後の1つ）を抽出
+  latest_idx <- tail(marker_idx, 1)
+  
+  # 山か谷かを判定
+  if (latest_idx %in% peak_idx) {
+    type <- "山（頂点）"
+  } else {
+    type <- "谷（底）"
+  }
+  
+  latest_marker <- data.frame(
+    種別         = type,
+    日付         = format(df_recent$date[latest_idx], "%Y-%m-%d"),
+    スプライン値 = round(spline_y[latest_idx], 3)
+  )
+  
+  # 色分け（山＝青、谷＝橙）
+  bg_col <- if (type == "山（頂点）") "#cce5ff" else "#ffe6cc"
+  txt_col <- if (type == "山（頂点）") "#0066cc" else "#ff8800"
+  
+  knitr::kable(latest_marker, align = c("c", "c", "r"), row.names = FALSE) |>
+    kableExtra::kable_styling(full_width = FALSE) |>
+    kableExtra::row_spec(1, background = bg_col, color = txt_col)
+} else {
+  cat("マーカーが検出されませんでした")
+}
+```
+
+#### 全期間表
+
+```{r}
+#| message: false
 
 # 全日付のデータフレームを作成し、山・谷をラベル付け
 種別_vec <- rep("", length(df_recent$date))
@@ -296,7 +368,7 @@ knitr::kable(result_tbl, align = c("c", "c", "r")) |>
 
 ---
 
-## 7. 補足・今後の改善案
+## 7. 補足・今後の改善案r
 
 - `N <- 200` のように変数を変えるだけで期間を変更できる
 - 直近N日は「営業日ベース」のため、土日祝は自動的に除外される
