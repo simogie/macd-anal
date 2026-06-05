@@ -15,14 +15,18 @@ Sys.setenv(LANGUAGE = "ja")
 
 # 1. 正しい「Raw URL」からCSVを直接読み込む
 csv_url <- "https://raw.githubusercontent.com/simogie/macd-anal/refs/heads/main/n225E.csv"
-data <- read.csv(csv_url, stringsAsFactors = FALSE)
+df <- read.csv(csv_url, stringsAsFactors = FALSE)  # ← df に直接読み込む
 
-# 2. 安全に列名を指定する（データがちゃんと2列以上あるか確認してから設定）
-if (is.data.frame(data) && ncol(data) >= 2) {
-    colnames(data)[1:2] <- c("date", "close")
+# 2. 安全に列名を指定する
+if (is.data.frame(df) && ncol(df) >= 2) {
+    colnames(df)[1:2] <- c("date", "close")
 } else {
     stop("データの読み込みに失敗しているか、表形式になっていません。URLを確認してください。")
 }
+
+df$date  <- as.Date(df$date)
+df$close <- as.numeric(df$close)
+
 
 
 colnames(df) <- c("date", "close")
