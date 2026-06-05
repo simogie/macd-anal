@@ -13,8 +13,17 @@ Sys.setenv(LANGUAGE = "ja")
 
 # df <- read.csv("D:/R/workspace/n225E.csv")
 
-# このようにGitHub上のRaw URLに書き換えます
-read.csv("https://raw.githubusercontent.com/simogie/macd-anal/refs/heads/main/n225E.csv")
+# 1. 正しい「Raw URL」からCSVを直接読み込む
+csv_url <- "https://raw.githubusercontent.com/simogie/macd-anal/refs/heads/main/n225E.csv"
+data <- read.csv(csv_url, stringsAsFactors = FALSE)
+
+# 2. 安全に列名を指定する（データがちゃんと2列以上あるか確認してから設定）
+if (is.data.frame(data) && ncol(data) >= 2) {
+    colnames(data)[1:2] <- c("date", "close")
+} else {
+    stop("データの読み込みに失敗しているか、表形式になっていません。URLを確認してください。")
+}
+
 
 colnames(df) <- c("date", "close")
 df$date  <- as.Date(df$date)
