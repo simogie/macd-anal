@@ -11,7 +11,11 @@ library(kableExtra)
 
 Sys.setenv(LANGUAGE = "ja")
 
-df <- read.csv("D:/R/workspace/n225E.csv")
+# df <- read.csv("D:/R/workspace/n225E.csv")
+
+# このようにGitHub上のRaw URLに書き換えます
+read.csv("https://raw.githubusercontent.com/simogie/macd-anal/refs/heads/main/n225E.csv")
+
 colnames(df) <- c("date", "close")
 df$date  <- as.Date(df$date)
 df$close <- as.numeric(df$close)
