@@ -72,7 +72,7 @@ legend("topright", legend = c("Histogram", "Spline"), col = c("black", "red"), l
        cex = 0.7, bty = "n")
 
 # 1階微分（変化の速さ）
-plot(df$date, d1, type = "l", main = "1階: MACDﾋｽﾄｸﾞﾗﾑのｽﾌﾟﾗｲﾝ曲線の変化速度",
+plot(df$date, d1, type = "l", main = "1階: MACDヒストグラムのスプライン曲線の変化速度",
      xlab = "日付", ylab = "d1")
 add_month_lines(df$date)
 abline(h = 0, col = "gray", lty = 2)
@@ -154,9 +154,9 @@ plot(df_recent$date, df_recent$hist, type = "l",
      xlab = "日付", ylab = "MACD Histogram")
 lines(df_recent$date, predict(fit_recent)$y, col = "red", lwd = 2)
 points(df_recent$date[peak_idx],   predict(fit_recent)$y[peak_idx],
-       pch = 25, col = "blue",   bg = "blue",   cex = 1.2)  # 山 ▼
+       pch = 25, col = "blue",   bg = "blue",   cex = 1.2)  # 山 下矢印
 points(df_recent$date[valley_idx], predict(fit_recent)$y[valley_idx],
-       pch = 24, col = "orange", bg = "orange", cex = 1.2)  # 谷 ▲
+       pch = 24, col = "orange", bg = "orange", cex = 1.2)  # 谷 上矢印
 add_month_lines(df_recent$date)
 abline(h = 0, col = "darkgoldenrod", lty = 1)
 legend("topleft",
