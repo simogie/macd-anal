@@ -3,21 +3,21 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "c8a5ec2c",
+   "id": "ff458a9a",
    "metadata": {
     "_execution_state": "idle",
     "_uuid": "051d70d956493feee0c6d64651c6a088724dca2a",
     "execution": {
-     "iopub.execute_input": "2026-06-05T07:17:36.096750Z",
-     "iopub.status.busy": "2026-06-05T07:17:36.094673Z",
-     "iopub.status.idle": "2026-06-05T07:17:37.090072Z",
-     "shell.execute_reply": "2026-06-05T07:17:37.088843Z"
+     "iopub.execute_input": "2026-06-05T07:31:50.075013Z",
+     "iopub.status.busy": "2026-06-05T07:31:50.072787Z",
+     "iopub.status.idle": "2026-06-05T07:31:51.254154Z",
+     "shell.execute_reply": "2026-06-05T07:31:51.252154Z"
     },
     "papermill": {
-     "duration": 1.001013,
-     "end_time": "2026-06-05T07:17:37.091737",
+     "duration": 1.188447,
+     "end_time": "2026-06-05T07:31:51.256848",
      "exception": false,
-     "start_time": "2026-06-05T07:17:36.090724",
+     "start_time": "2026-06-05T07:31:50.068401",
      "status": "completed"
     },
     "tags": []
@@ -83,19 +83,19 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "913b5585",
+   "id": "504c783f",
    "metadata": {
     "execution": {
-     "iopub.execute_input": "2026-06-05T07:17:37.117552Z",
-     "iopub.status.busy": "2026-06-05T07:17:37.096234Z",
-     "iopub.status.idle": "2026-06-05T07:17:38.544739Z",
-     "shell.execute_reply": "2026-06-05T07:17:38.542844Z"
+     "iopub.execute_input": "2026-06-05T07:31:51.298449Z",
+     "iopub.status.busy": "2026-06-05T07:31:51.264376Z",
+     "iopub.status.idle": "2026-06-05T07:31:53.131753Z",
+     "shell.execute_reply": "2026-06-05T07:31:53.128718Z"
     },
     "papermill": {
-     "duration": 1.453617,
-     "end_time": "2026-06-05T07:17:38.547023",
+     "duration": 1.876557,
+     "end_time": "2026-06-05T07:31:53.135607",
      "exception": false,
-     "start_time": "2026-06-05T07:17:37.093406",
+     "start_time": "2026-06-05T07:31:51.259050",
      "status": "completed"
     },
     "tags": []
@@ -885,6 +885,8 @@
     "\n",
     "Sys.setenv(LANGUAGE = \"ja\")\n",
     "\n",
+    "\n",
+    "\n",
     "df <- read.csv(\"/kaggle/input/datasets/teruhisashimotsuma/n225ecsv/n225E.csv\")\n",
     "\n",
     "colnames(df) <- c(\"date\", \"close\")\n",
@@ -1128,14 +1130,14 @@
   },
   "papermill": {
    "default_parameters": {},
-   "duration": 5.381641,
-   "end_time": "2026-06-05T07:17:38.679387",
+   "duration": 6.364143,
+   "end_time": "2026-06-05T07:31:53.280516",
    "environment_variables": {},
    "exception": null,
    "input_path": "__notebook__.ipynb",
    "output_path": "__notebook__.ipynb",
    "parameters": {},
-   "start_time": "2026-06-05T07:17:33.297746",
+   "start_time": "2026-06-05T07:31:46.916373",
    "version": "2.6.0"
   }
  },
